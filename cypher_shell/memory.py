@@ -7,25 +7,25 @@ class Memory:
     def __init__(
         self,
         topk: int = 3,
-        default_ignore_types: list[str] = ["error"],
+        default_ignore_types: list[str] = ("error",),
         track_user_queries: bool = True,
     ):
-        self.memory = []
-        self.topk = topk
-        self.default_ignore_types = default_ignore_types
-        self.track_user_queries = track_user_queries
-        self.user_queries = {}
+        self.memory: list[MemoryMessage] = []
+        self.topk: int = topk
+        self.default_ignore_types: list[str] = default_ignore_types
+        self.track_user_queries: bool = track_user_queries
+        self.user_queries: dict[str, str] = {}
 
-    def check_user_query(self, query: str):
+    def check_user_query(self, query: str) -> str | None:
         return self.user_queries.get(query, None)
 
-    def filter(self, ignore: list[str]):
+    def filter(self, ignore: list[str]) -> list[MemoryMessage]:
         return [message for message in self.memory if message.type not in ignore]
 
-    def filter_by_type(self, message_type: str):
+    def filter_by_type(self, message_type: str) -> list[MemoryMessage]:
         return [message for message in self.memory if message.type == message_type]
 
-    def filter_by_source(self, source: str):
+    def filter_by_source(self, source: str) -> list[MemoryMessage]:
         return [message for message in self.memory if message.source == source]
 
     def add(self, message: MemoryMessage):
@@ -41,9 +41,7 @@ class Memory:
         self.add(message)
 
     def __str__(self):
-        return "\n".join(
-            [f"[{message.source}]: {message.content}" for message in self.memory]
-        )
+        return "\n".join([f"[{message.source}]: {message.content}" for message in self.memory])
 
     def get(self):
         return self.filter(self.default_ignore_types)[-self.topk :]
