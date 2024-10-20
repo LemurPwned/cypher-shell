@@ -1,0 +1,51 @@
+import typer
+import yaml
+import os
+from .agent import CypherFlowSimple
+from .query_runner import QueryRunner
+from dotenv import load_dotenv
+from .utils import get_logger
+
+from rich.console import Console
+from rich.prompt import Prompt
+
+logger = get_logger()
+load_dotenv()
+
+console = Console()
+
+app = typer.Typer(
+    name="cypher-shell",
+    help="A shell for running Cypher queries on a Neo4j database.",
+    add_completion=True,
+)
+
+
+@app.command(help="Run a Cypher shell")
+def run(
+    cfg_path: str = typer.Option(..., help="Path to the .yaml configuration file"),
+):
+    with open(cfg_path, "r") as f:
+        cfg = yaml.safe_load(f)
+    query_runner = QueryRunner(
+        uri=os.getenv("NEO4J_URI"),
+        user=os.getenv("NEO4J_USER"),
+        password=os.getenv("NEO4J_PASSWORD"),
+    )
+    flow = CypherFlowSimple(
+        query_runner=query_runner,
+        node_descriptions=cfg["node_descriptions"],
+        relationship_descriptions=cfg["relationship_descriptions"],
+    )
+    while True:
+
+        query = Prompt.ask("[bold cyan]Enter your query[/bold cyan]")
+        results = flow.run(query)
+        if results:
+            console.print(f"Agent results: {results}", style="bold green")
+        else:
+            console.print("No results found", style="bold red")
+
+
+if __name__ == "__main__":
+    app()

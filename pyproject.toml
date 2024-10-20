@@ -1,0 +1,43 @@
+[project]
+name = "cypher-shell"
+description = "Cypher Shell -- a shell for querying Neo4j with Cypher"
+url = "https://github.com/LemurPwned/cypher-shell"
+version = "0.1"
+authors = [
+    { name = "LemurPwned", email = "lemurpwned@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">3.9"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+]
+
+keywords = [
+  "cypher",
+  "neo4j",
+  "querying",
+  "shell",
+  "llm"
+]
+
+dependencies = [
+    "pyyaml",
+    "python-dotenv",
+    "swarm",
+]
+
+[project.urls]
+Source = "https://github.com/LemurPwned/cypher-shell"
+
+[project.scripts]
+cypher_shell = "cypher_shell.__main__:main_loop"
+
+[build-system]
+build-backend = "flit_core.buildapi"
+requires = ["flit_core >=3.2,<4"]
