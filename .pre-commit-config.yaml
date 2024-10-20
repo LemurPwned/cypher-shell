@@ -31,28 +31,16 @@ repos:
         files: \.(html|json|markdown|md|yml)$
         exclude: (^docs/api/.*)
 
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.6.4
     hooks:
-      - id: isort
-        name: isort (python)
-
-  - repo: https://github.com/ambv/black
-    rev: 24.1.1
-    hooks:
-      - id: black
-        language_version: python3.9
-
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.0.0
-    hooks:
-      - id: flake8
-        name: flake8 (python)
-        additional_dependencies: [flake8-bugbear]
-        args: ["--max-line-length", "120", "--ignore", "B006,B008"]
-
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.0
-    hooks:
-      - id: pyupgrade
-        args: [--py311-plus]
+      # Run the linter.
+      - id: ruff
+        files: ^cypher_shell/
+        args: ["--fix"]
+        types_or: [python, pyi]
+      # Run the formatter.
+      - id: ruff-format
+        files: ^cypher_shell/
+        types_or: [python, pyi]

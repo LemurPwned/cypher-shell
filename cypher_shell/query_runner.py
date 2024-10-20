@@ -1,5 +1,7 @@
-from neo4j import GraphDatabase
 import os
+
+from neo4j import GraphDatabase
+
 from .utils import get_logger
 
 logger = get_logger()

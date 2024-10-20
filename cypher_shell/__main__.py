@@ -1,13 +1,14 @@
+import os
+
 import typer
 import yaml
-import os
-from .agent import CypherFlowSimple
-from .query_runner import QueryRunner
 from dotenv import load_dotenv
-from .utils import get_logger
-
 from rich.console import Console
 from rich.prompt import Prompt
+
+from .agent import CypherFlowSimple
+from .query_runner import QueryRunner
+from .utils import get_logger
 
 logger = get_logger()
 load_dotenv()
@@ -25,7 +26,7 @@ app = typer.Typer(
 def run(
     cfg_path: str = typer.Option(..., help="Path to the .yaml configuration file"),
 ):
-    with open(cfg_path, "r") as f:
+    with open(cfg_path) as f:
         cfg = yaml.safe_load(f)
     query_runner = QueryRunner(
         uri=os.getenv("NEO4J_URI"),
@@ -38,7 +39,6 @@ def run(
         relationship_descriptions=cfg["relationship_descriptions"],
     )
     while True:
-
         query = Prompt.ask("[bold cyan]Enter your query[/bold cyan]")
         results = flow.run(query)
         if results:

@@ -23,9 +23,6 @@ Return only the fixed query as a string.
 
 
 def get_node_schema(session, node_labels: list[str]):
-    schema_query = [
-        f"Match (n:{node_label}) return properties(n), ID(n) LIMIT 1"
-        for node_label in node_labels
-    ]
+    schema_query = [f"Match (n:{node_label}) return properties(n), ID(n) LIMIT 1" for node_label in node_labels]
     results = session.run(schema_query)
     return results

@@ -1,9 +1,9 @@
-from swarm import Swarm, Agent
-from .prompts.cypher import PROMPT_GENERATE_QUERY, PROMPT_FIX_QUERY
+from swarm import Agent, Swarm
 
+from .memory import Memory
+from .prompts.cypher import PROMPT_FIX_QUERY, PROMPT_GENERATE_QUERY
 from .query_runner import QueryRunner
 from .utils import get_logger
-from .memory import Memory
 
 logger = get_logger()
 
@@ -69,9 +69,7 @@ class CypherFlowSimple(BaseFlow):
         return results
 
     def run(self, query: str):
-        query_candidate = self.client.run(
-            agent=self.query_generator, messages=[{"role": "user", "content": query}]
-        )
+        query_candidate = self.client.run(agent=self.query_generator, messages=[{"role": "user", "content": query}])
         query_candidate = query_candidate.messages[-1]["content"]
 
         return self._run_query(query_candidate, attempt=2)
