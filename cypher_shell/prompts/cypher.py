@@ -9,9 +9,6 @@ Relationship descriptions: {rel_labels}
 
 For array properties, prefer WHERE X in Y instead of WHERE Y CONTAINS X.
 Return the Cypher query as a string. Do not include any other text.
-
-Previous user queries: {memory}
-Previous results: {results}
 """
 
 

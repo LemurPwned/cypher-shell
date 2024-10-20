@@ -51,7 +51,6 @@ class CypherFlowSimple(BaseFlow):
 
     def _run_query(self, query: str, attempt=2):
         cleaned_query = query.replace("```", "").strip().replace("cypher", "")
-
         if attempt == 0:
             logger.error("retried too many times")
             return None
@@ -69,7 +68,23 @@ class CypherFlowSimple(BaseFlow):
         return results
 
     def run(self, query: str):
-        query_candidate = self.client.run(agent=self.query_generator, messages=[{"role": "user", "content": query}])
+        if user_result := self.memory.check_user_query(query):
+            logger.info(f"Found user result for query: {query} in memory. Returning.")
+            return user_result
+
+        logger.info(f"Previous results: {self.memory.get()}")
+        query_candidate = self.client.run(
+            agent=self.query_generator,
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"Previous results: {self.memory.get()}\nUser query: {query}",
+                }
+            ],
+        )
         query_candidate = query_candidate.messages[-1]["content"]
 
-        return self._run_query(query_candidate, attempt=2)
+        result = self._run_query(query_candidate, attempt=2)
+        if result:
+            self.memory.add_user_result(query, result)
+        return result
