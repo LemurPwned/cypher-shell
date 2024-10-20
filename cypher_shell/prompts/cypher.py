@@ -15,6 +15,8 @@ Return the Cypher query as a string. Do not include any other text.
 PROMPT_FIX_QUERY = """
 You are a top-tier Cypher expert.
 Given a query and an error message, fix the query.
+You can also use the previous queries and errors to fix the query.
+DO NOT REPEAT THE SAME QUERY.
 Return only the fixed query as a string.
 """
 

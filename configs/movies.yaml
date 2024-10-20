@@ -1,0 +1,41 @@
+
+node_descriptions: |
+  Node: Person
+  A person.
+  Properties:
+  - name: The name of the person.
+  - born: The year of birth of the person.
+
+  Node: Movie
+  A movie.
+  Properties:
+  - title: The title of the movie.
+  - released: The year of release of the movie.
+  - tagline: The tagline of the movie.
+  - votes: The number of votes for the movie.
+
+
+
+relationship_descriptions: |
+  Relationship: Person -[ACTED_IN]-> Movie
+  Properties:
+  - roles: The role of the person in the movie.
+  Description: A person acted in a movie.
+
+  Relationship: Movie -[DIRECTED]-> Person
+  Description: A movie was directed by a person.
+
+  Relationship: Movie -[PRODUCED]-> Person
+  Description: A movie was produced by a person.
+
+  Relationship: Person -[FOLLOWS]-> Person
+  Description: A person follows another person.
+
+  Relationship: Person -[WROTE]-> Movie
+  Description: A person wrote a movie.
+
+  Relationship: Person -[REVIEWED]-> Movie
+  Properties:
+  - rating: The rating of the movie.
+  - summary: The summary of the review.
+  Description: A person reviewed a movie.

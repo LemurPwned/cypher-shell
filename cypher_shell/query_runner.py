@@ -17,7 +17,17 @@ class QueryRunner:
         assert uri, "NEO4J_URI is not set"
         assert user, "NEO4J_USER is not set"
         assert password, "NEO4J_PASSWORD is not set"
+        logger.info(f"Connecting to Neo4j [{uri}]")
         self.driver = GraphDatabase.driver(uri, auth=(user, password))
+        try:
+            self.check_connection()
+        except Exception as e:
+            logger.error(f"Failed to connect to Neo4j [{uri}]: {e}")
+            raise e from e
+
+    def check_connection(self):
+        with self.driver.session() as session:
+            session.run("RETURN 1")
 
     def close(self):
         self.driver.close()
