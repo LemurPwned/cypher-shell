@@ -1,8 +1,16 @@
+import re
+
 from rich.markdown import Markdown
 from swarm import Agent, Swarm
 
 from .memory import Memory
-from .prompts.cypher import PROMPT_FIX_QUERY, PROMPT_GENERATE_QUERY
+from .prompts.cypher import (
+    PROMPT_FIX_QUERY,
+    PROMPT_GENERATE_QUERY,
+    PROMPT_GENERATE_QUERY_AUTOSCHEMA,
+    get_nodes_schema,
+    get_properties,
+)
 from .prompts.general import PROMPT_FORMAT_RESULT
 from .query_runner import QueryRunner
 from .utils import get_logger
@@ -31,19 +39,30 @@ class CypherFlowSimple(BaseFlow):
     def __init__(
         self,
         query_runner: QueryRunner,
-        node_descriptions: str,
-        relationship_descriptions: str,
+        node_descriptions: str | None = None,
+        relationship_descriptions: str | None = None,
         max_attempts_per_query: int = 3,
         default_model: str = "gpt-4o-mini",
     ):
         super().__init__(query_runner, node_descriptions, relationship_descriptions)
+        if node_descriptions is None and relationship_descriptions is None:
+            generic_schema = get_nodes_schema(query_runner.driver.session())
+            node_properties, rel_properties = get_properties(query_runner.driver.session())
+            instructions = PROMPT_GENERATE_QUERY_AUTOSCHEMA.format(
+                schema=generic_schema,
+                node_properties=node_properties,
+                rel_properties=rel_properties,
+            )
+        else:
+            assert node_descriptions is not None and relationship_descriptions is not None
+            instructions = PROMPT_GENERATE_QUERY.format(
+                node_labels=node_descriptions, rel_labels=relationship_descriptions
+            )
         self.query_generator = Agent(
             name="Cypher Query generator",
             model=default_model,
             temperature=0.0,
-            instructions=PROMPT_GENERATE_QUERY.format(
-                node_labels=node_descriptions, rel_labels=relationship_descriptions
-            ),
+            instructions=instructions,
         )
         self.query_fixer = Agent(
             name="Cypher Query Fixer",
@@ -68,7 +87,10 @@ class CypherFlowSimple(BaseFlow):
         past_errors: list[str] | None = None,
         prev_query_attempts: list[str] | None = None,
     ):
-        cleaned_query = query.replace("```", "").strip().replace("cypher", "")
+        # cleaned_query = query.replace("```", "").strip().replace("cypher", "")
+        # grab anything between ```cypher and ```
+        logger.info(query)
+        cleaned_query = re.search(r"```cypher(.*)```", query, re.DOTALL).group(1)
         if past_errors is None:
             past_errors = []
         if prev_query_attempts is None:

@@ -23,12 +23,24 @@ app = typer.Typer(
 
 @app.command(help="Run a Cypher shell")
 def run(
-    cfg_path: str = typer.Option(..., help="Path to the .yaml configuration file"),
-    env_path: str = typer.Option(default=None, help="Path to the .env file"),
+    cfg_path: str | None = typer.Option(default=None, help="Path to the .yaml configuration file"),
+    env_path: str | None = typer.Option(default=None, help="Path to the .env file"),
 ):
     load_dotenv(env_path, override=True)
-    with open(cfg_path) as f:
-        cfg = yaml.safe_load(f)
+    cfg = {}
+    if cfg_path is None:
+        console.print(
+            "No configuration file provided, using auto-schema generation",
+            style="bold yellow",
+        )
+    else:
+        with open(cfg_path) as f:
+            cfg = yaml.safe_load(f)
+
+        assert cfg is not None, "Configuration file is empty"
+        assert (
+            "node_descriptions" in cfg or "relationship_descriptions" in cfg
+        ), "Either node_descriptions or relationship_descriptions must be provided"
     query_runner = QueryRunner(
         uri=os.getenv("NEO4J_URI"),
         user=os.getenv("NEO4J_USER"),
@@ -36,8 +48,7 @@ def run(
     )
     flow = CypherFlowSimple(
         query_runner=query_runner,
-        node_descriptions=cfg["node_descriptions"],
-        relationship_descriptions=cfg["relationship_descriptions"],
+        **cfg,
     )
     while True:
         query = Prompt.ask("[bold cyan]Enter your query[/bold cyan]")
