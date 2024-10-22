@@ -10,6 +10,7 @@ from .prompts.cypher import (
     PROMPT_GENERATE_QUERY_AUTOSCHEMA,
     get_nodes_schema,
     get_properties,
+    get_relationship_structure_sampled,
 )
 from .prompts.general import PROMPT_FORMAT_RESULT
 from .query_runner import QueryRunner
@@ -48,11 +49,14 @@ class CypherFlowSimple(BaseFlow):
         if node_descriptions is None and relationship_descriptions is None:
             generic_schema = get_nodes_schema(query_runner.driver.session())
             node_properties, rel_properties = get_properties(query_runner.driver.session())
+            relationship_structure = get_relationship_structure_sampled(query_runner.driver.session())
             instructions = PROMPT_GENERATE_QUERY_AUTOSCHEMA.format(
                 schema=generic_schema,
                 node_properties=node_properties,
                 rel_properties=rel_properties,
+                relationship_structure=relationship_structure,
             )
+            logger.debug(instructions)
         else:
             assert node_descriptions is not None and relationship_descriptions is not None
             instructions = PROMPT_GENERATE_QUERY.format(
@@ -90,7 +94,10 @@ class CypherFlowSimple(BaseFlow):
         # cleaned_query = query.replace("```", "").strip().replace("cypher", "")
         # grab anything between ```cypher and ```
         logger.info(query)
-        cleaned_query = re.search(r"```cypher(.*)```", query, re.DOTALL).group(1)
+        try:
+            cleaned_query = re.search(r"```cypher(.*)```", query, re.DOTALL).group(1)
+        except Exception:
+            cleaned_query = query.replace("```", "").strip().replace("cypher", "")
         if past_errors is None:
             past_errors = []
         if prev_query_attempts is None:

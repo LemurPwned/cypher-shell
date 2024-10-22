@@ -1,4 +1,11 @@
+from functools import lru_cache
+from itertools import groupby
+
 import neo4j
+
+from ..utils import get_logger
+
+logger = get_logger()
 
 PROMPT_GENERATE_QUERY = """
 You are a helpful assistant that generates Cypher queries.
@@ -23,6 +30,10 @@ Here is the schema:
 Here is the list of node and relationship properties:
 Node properties: {node_properties}
 Relationship properties: {rel_properties}
+
+Here is the relationship structure:
+{relationship_structure}
+
 You need to generate a Cypher query that will return the data you need to answer the user's question.
 """
 
@@ -59,3 +70,77 @@ def get_properties(session: neo4j.Session):
     node_data = node_results.data()
     rel_data = rel_results.data()
     return node_data, rel_data
+
+
+def format_relationship_structure(relationship_map: list[dict[str, list[str]]]) -> str:
+    """Format the relationship structure into a string digestible by LLMs."""
+    sorted_relationship_map = sorted(relationship_map, key=lambda x: x["relationshipType"])
+    rel_str = ""
+    for k, g in groupby(sorted_relationship_map, key=lambda x: x["relationshipType"]):
+        start_nodes, end_nodes = [], []
+        for x in g:
+            start_nodes.extend(x["startNodeLabels"])
+            end_nodes.extend(x["endNodeLabels"])
+        start_nodes = list(set(start_nodes))
+        end_nodes = list(set(end_nodes))
+        rel_str += f"Relationship: {k}: Start nodes: {start_nodes} -> End nodes: {end_nodes}\n"
+    return rel_str
+
+
+@lru_cache(maxsize=1)
+def get_relationship_structure_sampled(session: neo4j.Session, sample_size: int = 10000):
+    logger.info(f"Getting relationship structure with sample size {sample_size}")
+    schema_query = f"""
+    MATCH (s)-[r]->(e)
+    WITH s, r, e, rand() AS random
+    ORDER BY random
+    LIMIT {sample_size}
+    RETURN DISTINCT type(r) AS relationshipType, labels(s) AS startNodeLabels, labels(e) AS endNodeLabels
+    """
+    results = session.run(schema_query)
+    data = results.data()
+    return format_relationship_structure(data)
+
+
+def get_relationship_structure_detailed(session: neo4j.Session):
+    """This is somewhat inefficient, but it's only run once."""
+    start_node_query = """
+    MATCH (n)
+    WITH labels(n) AS nodeLabels
+    MATCH (start)-[r]->()
+    WHERE all(label IN nodeLabels WHERE label IN labels(start))
+    RETURN DISTINCT nodeLabels, collect(DISTINCT type(r)) AS relationshipTypes
+    """
+    start_node_results = session.run(start_node_query)
+    start_node_data = start_node_results.data()
+
+    end_node_query = """
+    MATCH (n)
+    WITH labels(n) AS nodeLabels
+    MATCH ()-[r]->(end)
+    WHERE all(label IN nodeLabels WHERE label IN labels(end))
+    RETURN DISTINCT nodeLabels, collect(DISTINCT type(r)) AS relationshipTypes
+    """
+    end_node_results = session.run(end_node_query)
+    end_node_data = end_node_results.data()
+
+    # combine the results
+    relationship_map = {}
+    for rel_data in start_node_data:
+        for rel in rel_data["relationshipTypes"]:
+            if rel not in relationship_map:
+                relationship_map[rel] = {
+                    "start_nodes": [],
+                    "end_nodes": [],
+                }
+            relationship_map[rel]["start_nodes"].extend(rel_data["nodeLabels"])
+    for rel_data in end_node_data:
+        for rel in rel_data["relationshipTypes"]:
+            if rel not in relationship_map:
+                relationship_map[rel] = {
+                    "start_nodes": [],
+                    "end_nodes": [],
+                }
+            relationship_map[rel]["end_nodes"].extend(rel_data["nodeLabels"])
+
+    return relationship_map

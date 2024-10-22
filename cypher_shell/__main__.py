@@ -1,3 +1,4 @@
+import logging
 import os
 
 import typer
@@ -25,6 +26,7 @@ app = typer.Typer(
 def run(
     cfg_path: str | None = typer.Option(default=None, help="Path to the .yaml configuration file"),
     env_path: str | None = typer.Option(default=None, help="Path to the .env file"),
+    debug: bool = typer.Option(default=False, help="Enable debug mode"),
 ):
     load_dotenv(env_path, override=True)
     cfg = {}
@@ -39,8 +41,10 @@ def run(
 
         assert cfg is not None, "Configuration file is empty"
         assert (
-            "node_descriptions" in cfg or "relationship_descriptions" in cfg
-        ), "Either node_descriptions or relationship_descriptions must be provided"
+            "node_descriptions" in cfg and "relationship_descriptions" in cfg
+        ), "Both node_descriptions and relationship_descriptions must be provided in the configuration file"
+    if debug:
+        logger.setLevel(logging.DEBUG)
     query_runner = QueryRunner(
         uri=os.getenv("NEO4J_URI"),
         user=os.getenv("NEO4J_USER"),
@@ -54,7 +58,6 @@ def run(
         query = Prompt.ask("[bold cyan]Enter your query[/bold cyan]")
         results = flow.run(query)
         if results:
-            # console.print(f"Agent results: {results}", style="bold green")
             console.print(results)
         else:
             console.print("No results found", style="bold red")
