@@ -54,7 +54,7 @@ def get_nodes_schema(session: neo4j.Session):
 
 
 def node_and_rel_labels(session: neo4j.Session):
-    nodes = "CALL db.relationshipTypes()"
+    nodes = "CALL db.labels()"
     rels = "CALL db.relationshipTypes()"
     results_nodes = session.run(nodes)
     results_rels = session.run(rels)
@@ -88,7 +88,7 @@ def format_relationship_structure(relationship_map: list[dict[str, list[str]]]) 
 
 
 @lru_cache(maxsize=1)
-def get_relationship_structure_sampled(session: neo4j.Session, sample_size: int = 10000):
+def get_relationship_structure_sampled(session: neo4j.Session, sample_size: int = 1000):
     logger.info(f"Getting relationship structure with sample size {sample_size}")
     schema_query = f"""
     MATCH (s)-[r]->(e)
