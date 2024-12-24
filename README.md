@@ -31,5 +31,5 @@ You need to set the `.env` file with your OpenAI API key and Neo4j credentials. 
 You can also run the tool using Docker.
 
 ```bash
-docker run --env .env -it ghcr.io/lemurpwned/cypher-shell:latest --cfg-path configs/movies.yaml
+docker run --env .env -it ghcr.io/lemurpwned/cypher-shell:latest python3 -m cypher_shell --cfg-path configs/movies.yaml
 ```

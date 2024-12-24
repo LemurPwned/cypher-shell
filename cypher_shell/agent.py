@@ -136,19 +136,25 @@ class CypherFlowSimple(BaseFlow):
             logger.info(f"Found user result for query: {query} in memory. Returning.")
             return user_result
 
-        logger.debug(f"Previous results: {self.memory.get()}")
-        query_candidate = self.client.run(
-            agent=self.query_generator,
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"Previous results: {self.memory.get()}\nUser query: {query}",
-                }
-            ],
-        )
-        query_candidate = query_candidate.messages[-1]["content"]
+        if query.startswith("cs:"):
+            logger.info("The user wants to run a manual query")
+            # this is a manual query, don't ask the agent to generate it
+            query = query[3:]
+            result = self._run_query(query, attempt=1)
+        else:
+            logger.debug(f"Previous results: {self.memory.get()}")
+            query_candidate = self.client.run(
+                agent=self.query_generator,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"Previous results: {self.memory.get()}\nUser query: {query}",
+                    }
+                ],
+            )
+            query_candidate = query_candidate.messages[-1]["content"]
 
-        result = self._run_query(query_candidate, attempt=self.max_attempts_per_query)
+            result = self._run_query(query_candidate, attempt=self.max_attempts_per_query)
         if result:
             self.memory.add_user_result(query, result)
             if use_formatter:
