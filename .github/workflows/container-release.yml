@@ -4,7 +4,11 @@ on:
   push:
     tags:
       - '*'
-
+    paths:
+      - 'cypher_shell/**'
+      - 'pyproject.toml'
+  workflow_dispatch:
+    
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
