@@ -4,12 +4,19 @@ on:
   pull_request:
     types: [closed]
     branches: [main]
+    paths:
+      - 'cypher_shell/**'
+      - 'pyproject.toml'
   workflow_dispatch:
     inputs:
       dry-run: 
         required: true
         default: true
         type: boolean
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build:
@@ -58,3 +65,31 @@ jobs:
           --repo="$GITHUB_REPOSITORY" \
           --title="${GITHUB_REPOSITORY#*/} ${RELEASE_VERSION}" \
           --generate-notes
+
+  build-and-push:
+    needs: [release, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            latest 
+            ${{ needs.build.outputs.version }}
+  
