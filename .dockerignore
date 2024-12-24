@@ -1,0 +1,5 @@
+.github/workflows/
+.pre-commit-config.yaml
+ruff.toml
+.ruff_cache
+__pycache__/

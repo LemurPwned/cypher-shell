@@ -95,7 +95,7 @@ class CypherFlowSimple(BaseFlow):
         # grab anything between ```cypher and ```
         logger.info(query)
         try:
-            cleaned_query = re.search(r"```cypher(.*)```", query, re.DOTALL).group(1)
+            cleaned_query = re.search(r"```cypher(.*)```", query, re.DOTALL)[1]
         except Exception:
             cleaned_query = query.replace("```", "").strip().replace("cypher", "")
         if past_errors is None:

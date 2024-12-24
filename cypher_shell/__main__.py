@@ -56,8 +56,7 @@ def run(
     )
     while True:
         query = Prompt.ask("[bold cyan]Enter your query[/bold cyan]")
-        results = flow.run(query)
-        if results:
+        if results := flow.run(query):
             console.print(results)
         else:
             console.print("No results found", style="bold red")

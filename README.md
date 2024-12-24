@@ -17,7 +17,7 @@ python -m cypher_shell --help
 or
 
 ```bash
-python -m cypher_shell --config configs/movies.yaml
+python -m cypher_shell --cfg-path configs/movies.yaml
 ```
 
 where `configs/movies.yaml` is a configuration file that contains the node and relationship descriptions.
@@ -25,3 +25,11 @@ where `configs/movies.yaml` is a configuration file that contains the node and r
 If no configuration file is provided, the tool will try to generate a schema automatically. This might give worse results.
 
 You need to set the `.env` file with your OpenAI API key and Neo4j credentials. See `.env_template` for more information.
+
+### Docker
+
+You can also run the tool using Docker.
+
+```bash
+docker run --env .env -it ghcr.io/lemurpwned/cypher-shell:latest --cfg-path configs/movies.yaml
+```
