@@ -31,5 +31,5 @@ jobs:
           file: ./docker/Dockerfile
           push: true
           tags: |
-            latest 
-            ${{ inputs.version }} 
+            ghcr.io/lemurpwned/cypher-shell:latest 
+            ghcr.io/lemurpwned/cypher-shell:${{ inputs.version }} 
