@@ -32,7 +32,7 @@ keywords = [
 dependencies = [
     "pyyaml",
     "python-dotenv",
-    "swarm @ git+https://github.com/openai/swarm.git",
+    "openai-swarm>=0.1.1",
     "typer >= 0.12.5",
     "openai >= 1.51.2",
     "neo4j >= 5.25.0",
