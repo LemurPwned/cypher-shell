@@ -4,8 +4,16 @@ import os
 import typer
 import yaml
 from dotenv import load_dotenv
+from prompt_toolkit import PromptSession
+from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.formatted_text import HTML
+from prompt_toolkit.lexers import PygmentsLexer
+from prompt_toolkit.shortcuts import CompleteStyle
+from prompt_toolkit.styles import Style, style_from_pygments_cls
+from prompt_toolkit.validation import ValidationError, Validator
+from pygments.lexers.graph import CypherLexer
+from pygments.styles.tango import TangoStyle
 from rich.console import Console
-from rich.prompt import Prompt
 
 from .agent import CypherFlowSimple
 from .query_runner import QueryRunner
@@ -20,6 +28,14 @@ app = typer.Typer(
     help="A shell for running Cypher queries on a Neo4j database.",
     add_completion=True,
 )
+
+
+class ShellValidator(Validator):
+    def validate(self, document):
+        text = document.text
+
+        if not text:
+            raise ValidationError(message="Query cannot be empty", cursor_position=0)
 
 
 @app.command(help="Run a Cypher shell")
@@ -54,13 +70,62 @@ def run(
         query_runner=query_runner,
         **cfg,
     )
+
+    cypher_completer = WordCompleter(
+        [
+            "cs:",
+            "MATCH",
+            "WHERE",
+            "RETURN",
+            "CREATE",
+            "DELETE",
+            "MERGE",
+            "SET",
+            "REMOVE",
+            "CALL",
+            "OPTIONAL",
+            "UNWIND",
+            "WITH",
+            "ORDER BY",
+            "SKIP",
+            "LIMIT",
+            "RETURN DISTINCT",
+            "RETURN COUNT",
+            "RETURN EXISTS",
+            "RETURN DISTINCT",
+            "RETURN COUNT",
+            "RETURN EXISTS",
+            "RETURN DISTINCT",
+            "RETURN COUNT",
+            "RETURN EXISTS",
+            "RETURN DISTINCT",
+            "RETURN COUNT",
+            "RETURN EXISTS",
+        ],
+        ignore_case=True,
+        match_middle=True,
+    )
+    tango_style = style_from_pygments_cls(TangoStyle)
+    session = PromptSession(
+        lexer=PygmentsLexer(CypherLexer),
+        validator=ShellValidator(),
+        completer=cypher_completer,
+        style=tango_style,
+        complete_style=CompleteStyle.READLINE_LIKE,
+    )
     while True:
-        query = Prompt.ask("[bold cyan]Enter your query[/bold cyan]")
-        results = flow.run(query)
-        if results:
-            console.print(results)
-        else:
-            console.print("No results found", style="bold red")
+        try:
+            query = session.prompt(
+                HTML("<ansired>Enter your query:  </ansired>"),
+                style=Style.from_dict({"": "ansigray"}),
+            )
+            if results := flow.run(query):
+                console.print(results)
+            else:
+                console.print("No results found", style="bold red")
+        except (KeyboardInterrupt, EOFError):
+            console.print("Exiting...", style="bold red")
+            break
 
 
 if __name__ == "__main__":

@@ -46,6 +46,12 @@ Return only the fixed query as a string.
 """
 
 
+def _query_run(session: neo4j.Session, query: str):
+    results = session.run(query)
+    data = results.data()
+    return data
+
+
 def get_nodes_schema(session: neo4j.Session):
     schema_query = """CALL db.schema.visualization()"""
     results = session.run(schema_query)
@@ -97,9 +103,8 @@ def get_relationship_structure_sampled(session: neo4j.Session, sample_size: int 
     LIMIT {sample_size}
     RETURN DISTINCT type(r) AS relationshipType, labels(s) AS startNodeLabels, labels(e) AS endNodeLabels
     """
-    results = session.run(schema_query)
-    data = results.data()
-    return format_relationship_structure(data)
+    results = _query_run(session, schema_query)
+    return format_relationship_structure(results)
 
 
 def get_relationship_structure_detailed(session: neo4j.Session):
@@ -111,8 +116,7 @@ def get_relationship_structure_detailed(session: neo4j.Session):
     WHERE all(label IN nodeLabels WHERE label IN labels(start))
     RETURN DISTINCT nodeLabels, collect(DISTINCT type(r)) AS relationshipTypes
     """
-    start_node_results = session.run(start_node_query)
-    start_node_data = start_node_results.data()
+    start_node_data = _query_run(session, start_node_query)
 
     end_node_query = """
     MATCH (n)
@@ -121,8 +125,7 @@ def get_relationship_structure_detailed(session: neo4j.Session):
     WHERE all(label IN nodeLabels WHERE label IN labels(end))
     RETURN DISTINCT nodeLabels, collect(DISTINCT type(r)) AS relationshipTypes
     """
-    end_node_results = session.run(end_node_query)
-    end_node_data = end_node_results.data()
+    end_node_data = _query_run(session, end_node_query)
 
     # combine the results
     relationship_map = {}

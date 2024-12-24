@@ -2,7 +2,7 @@
 name = "cypher-shell"
 description = "Cypher Shell -- a shell for querying Neo4j with Cypher"
 url = "https://github.com/LemurPwned/cypher-shell"
-version = "0.1"
+version = "0.2"
 authors = [
     { name = "LemurPwned", email = "lemurpwned@gmail.com" }
 ]
@@ -32,7 +32,11 @@ keywords = [
 dependencies = [
     "pyyaml",
     "python-dotenv",
-    "swarm",
+    "swarm @ git+https://github.com/openai/swarm.git",
+    "typer >= 0.12.5",
+    "openai >= 1.51.2",
+    "neo4j >= 5.25.0",
+    "prompt_toolkit >= 3.0.48",
 ]
 
 [project.urls]
