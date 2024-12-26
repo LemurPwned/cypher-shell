@@ -39,3 +39,5 @@ relationship_descriptions: |
   - rating: The rating of the movie.
   - summary: The summary of the review.
   Description: A person reviewed a movie.
+
+default_model: "gpt-4o-mini"

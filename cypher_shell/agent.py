@@ -46,6 +46,7 @@ class CypherFlowSimple(BaseFlow):
         default_model: str = "gpt-4o-mini",
     ):
         super().__init__(query_runner, node_descriptions, relationship_descriptions)
+        logger.debug(f"Using model: {default_model}")
         if node_descriptions is None and relationship_descriptions is None:
             generic_schema = get_nodes_schema(query_runner.driver.session())
             node_properties, rel_properties = get_properties(query_runner.driver.session())
@@ -93,7 +94,7 @@ class CypherFlowSimple(BaseFlow):
     ):
         # cleaned_query = query.replace("```", "").strip().replace("cypher", "")
         # grab anything between ```cypher and ```
-        logger.info(query)
+        logger.debug(query)
         try:
             cleaned_query = re.search(r"```cypher(.*)```", query, re.DOTALL)[1]
         except Exception:
