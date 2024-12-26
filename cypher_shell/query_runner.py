@@ -1,10 +1,21 @@
 import os
+import time
 
 from neo4j import GraphDatabase
 
 from .utils import get_logger
 
 logger = get_logger()
+
+
+def timing(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        return result, end_time - start_time
+
+    return wrapper
 
 
 class QueryRunner:
@@ -32,6 +43,7 @@ class QueryRunner:
     def close(self):
         self.driver.close()
 
+    @timing
     def run(self, query: str):
         with self.driver.session() as session:
             res = session.run(query)
