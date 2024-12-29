@@ -10,4 +10,4 @@ COPY . .
 
 RUN python3 -m pip install -e .
 
-CMD ["python3", "-m", "cypher_shell"]`
+CMD ["python3", "-m", "cypher_shell"]
