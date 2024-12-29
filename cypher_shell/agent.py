@@ -1,6 +1,8 @@
+import os
 import re
 
 from neo4j.exceptions import CypherSyntaxError
+from openai import OpenAI
 from rich.markdown import Markdown
 from swarm import Agent, Swarm
 
@@ -85,7 +87,14 @@ class CypherFlowSimple(BaseFlow):
             temperature=0.0,
             instructions=PROMPT_FORMAT_RESULT,
         )
-        self.client = Swarm()
+        _client = None
+        self.use_optiLLM = os.environ.get("USE_OPTILLM", "false") == "true"
+        if self.use_optiLLM:
+            logger.info("Using OptiLLM")
+            OPENAI_KEY = os.environ.get("OPENAI_API_KEY")
+            OPENAI_BASE_URL = "http://localhost:8000/v1"
+            _client = OpenAI(api_key=OPENAI_KEY, base_url=OPENAI_BASE_URL)
+        self.client = Swarm(client=_client)
         self.max_attempts_per_query = max_attempts_per_query
 
     def _run_query(
@@ -158,16 +167,28 @@ class CypherFlowSimple(BaseFlow):
             result = self._run_query(query, attempt=1)
         else:
             logger.debug(f"Previous results: {self.memory.get()}")
-            query_candidate = self.client.run(
-                agent=self.query_generator,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": f"Previous results: {self.memory.get()}\nUser query: {query}",
-                    }
-                ],
-            )
-            query_candidate = query_candidate.messages[-1]["content"]
+            messages = [
+                {
+                    "role": "user",
+                    "content": f"Previous results: {self.memory.get()}\nUser query: {query}",
+                }
+            ]
+            if self.use_optiLLM:
+                # use underlying client to avoid extra tool calls
+                messages = [{"role": "system", "content": self.query_generator.instructions}] + messages
+                query_candidate = self.client.client.chat.completions.create(
+                    model="moa-gpt-4o-mini",
+                    messages=messages,
+                    extra_body={"optillm_approach": "mcts"},
+                    temperature=0.0,
+                )
+                query_candidate = query_candidate.choices[0].message.content
+            else:
+                query_candidate = self.client.run(
+                    agent=self.query_generator,
+                    messages=messages,
+                )
+                query_candidate = query_candidate.messages[-1]["content"]
 
             result = self._run_query(query_candidate, attempt=self.max_attempts_per_query)
         if result:
