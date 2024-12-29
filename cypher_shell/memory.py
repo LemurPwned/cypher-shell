@@ -61,7 +61,8 @@ class Memory:
                             "user_query": user_query,
                             "cypher_query": machine_query,
                             "timing": timing,
-                        }
+                        },
+                        indent=4,
                     )
                 )
 

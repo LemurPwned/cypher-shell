@@ -2,7 +2,7 @@
 name = "cypher-shell"
 description = "Cypher Shell -- a shell for querying Neo4j with Cypher"
 url = "https://github.com/LemurPwned/cypher-shell"
-version = "0.2"
+version = "0.3"
 authors = [
     { name = "LemurPwned", email = "lemurpwned@gmail.com" }
 ]

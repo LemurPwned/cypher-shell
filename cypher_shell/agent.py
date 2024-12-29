@@ -1,5 +1,6 @@
 import re
 
+from neo4j.exceptions import CypherSyntaxError
 from rich.markdown import Markdown
 from swarm import Agent, Swarm
 
@@ -93,6 +94,7 @@ class CypherFlowSimple(BaseFlow):
         attempt=2,
         past_errors: list[str] | None = None,
         prev_query_attempts: list[str] | None = None,
+        show_syntax_error: bool = False,
     ):
         # cleaned_query = query.replace("```", "").strip().replace("cypher", "")
         # grab anything between ```cypher and ```
@@ -112,8 +114,14 @@ class CypherFlowSimple(BaseFlow):
         try:
             logger.info(f"Running query: {cleaned_query}")
             results, query_timing = self.query_runner.run(cleaned_query)
+        except CypherSyntaxError as e:
+            msg = f"Query failed due to syntax error: {e.message}"
+            if show_syntax_error:
+                logger.error(msg)
+            else:
+                logger.debug(msg)
+            return None
         except Exception as e:
-            # logger.error(f"Query failed: {e.message}")
             query = self.client.run(
                 agent=self.query_fixer,
                 messages=[

@@ -33,3 +33,5 @@ You can also run the tool using Docker.
 ```bash
 docker run --env .env -it ghcr.io/lemurpwned/cypher-shell:latest python3 -m cypher_shell --cfg-path configs/movies.yaml
 ```
+
+### OptiLLM notes
